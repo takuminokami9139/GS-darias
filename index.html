@@ -22,12 +22,12 @@
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.2, 0.2, 0.2);
 
-            // カメラの設定（ターゲットを原点に固定）
+            // カメラの初期化（数値は後ほどSPZ読み込み成功時に上書きされます）
             const camera = new BABYLON.ArcRotateCamera(
                 "camera", 
-                Math.PI / 4,        // 水平角度
-                Math.PI / 3,        // 垂直角度
-                5,                  // 初期距離（遠ければ数値を小さく、近すぎたら大きくしてください）
+                0, 
+                0, 
+                10, 
                 BABYLON.Vector3.Zero(), 
                 scene
             );
@@ -42,23 +42,34 @@
                 console.log("SPZの読み込みが成功しました！");
 
                 // -------------------------------------------------------------
-                // 【ここを追加】読み込んだモデルの向きを180度回転させて調整する
+                // 必要に応じてモデルの向きを回転させる（コメントアウトを外して使用）
                 // -------------------------------------------------------------
-                // if (result.meshes && result.meshes.length > 0) {
-                //     result.meshes.forEach(mesh => {
-                        
-                //         // パターン①：【上下が逆さま（逆立ち）】になっている場合
-                //         // X軸（横軸）を中心に180度（Math.PI）回転させます
-                //         mesh.rotate(BABYLON.Axis.X, Math.PI, BABYLON.Space.LOCAL);
+                if (result.meshes && result.meshes.length > 0) {
+                    result.meshes.forEach(mesh => {
+                        // パターン①：上下逆さまの場合
+                        // mesh.rotate(BABYLON.Axis.X, Math.PI, BABYLON.Space.LOCAL);
 
-                //         // パターン②：【前後・左右が逆（水平方向に反転）】になっている場合
-                //         // Y軸（縦軸）を中心に180度（Math.PI）回転させます
-                //         //（※もし上下ではなく前後が逆だった場合は、上のパターン①を消して、下の行のコメントアウト「//」を外してください）
-                //         // mesh.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL);
-                        
-                //     });
-                // }
+                        // パターン②：水平方向に反転している場合
+                        // mesh.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL);
+                    });
+                }
                 // -------------------------------------------------------------
+
+                // =============================================================
+                // 【カメラの初期位置をターゲット座標から相対的に設定】
+                // =============================================================
+                
+                const targetPosition = new BABYLON.Vector3(0, -2, 0); //(、ズーム) 
+                camera.setTarget(targetPosition);
+
+                camera.radius = 8.0; 
+                camera.alpha = Math.PI / -2; 
+                camera.beta = Math.PI / 1; 
+
+                // 【追加】カメラの上方向をZ軸（0, 0, 1）に指定する
+                camera.upVector = new BABYLON.Vector3(0, 0, -1); //(、上下反転) 
+
+                // =============================================================
 
             } catch (error) {
                 console.error("読み込みエラーが発生しました:", error);
