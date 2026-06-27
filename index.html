@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js SPZ Viewer</title>
+    <style>
+        html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }
+        #renderCanvas { width: 100%; height: 100%; touch-action: none; }
+    </style>
+    <script src="./babylon.js"></script>
+    <script src="./babylonjs.loaders.min.js"></script>
+    <script src="./babylon.splatFileLoader.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = async function () {
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+
+            // カメラの設定（ターゲットを原点に固定）
+            const camera = new BABYLON.ArcRotateCamera(
+                "camera", 
+                Math.PI / 4,        // 水平角度
+                Math.PI / 3,        // 垂直角度
+                5,                  // 初期距離（遠ければ数値を小さく、近すぎたら大きくしてください）
+                BABYLON.Vector3.Zero(), 
+                scene
+            );
+            camera.attachControl(canvas, true);
+            camera.wheelPrecision = 50;
+
+            scene.createDefaultLight(true);
+
+            console.log("SPZファイルを読み込み中...");
+            try {
+                const result = await BABYLON.SceneLoader.ImportMeshAsync("", "./", "untitled.spz", scene);
+                console.log("SPZの読み込みが成功しました！");
+
+                // -------------------------------------------------------------
+                // 【ここを追加】読み込んだモデルの向きを180度回転させて調整する
+                // -------------------------------------------------------------
+                if (result.meshes && result.meshes.length > 0) {
+                    result.meshes.forEach(mesh => {
+                        
+                        // パターン①：【上下が逆さま（逆立ち）】になっている場合
+                        // X軸（横軸）を中心に180度（Math.PI）回転させます
+                        mesh.rotate(BABYLON.Axis.X, Math.PI, BABYLON.Space.LOCAL);
+
+                        // パターン②：【前後・左右が逆（水平方向に反転）】になっている場合
+                        // Y軸（縦軸）を中心に180度（Math.PI）回転させます
+                        //（※もし上下ではなく前後が逆だった場合は、上のパターン①を消して、下の行のコメントアウト「//」を外してください）
+                        // mesh.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL);
+                        
+                    });
+                }
+                // -------------------------------------------------------------
+
+            } catch (error) {
+                console.error("読み込みエラーが発生しました:", error);
+            }
+
+            return scene;
+        };
+
+        createScene().then((scene) => {
+            engine.runRenderLoop(function () {
+                scene.render();
+            });
+        });
+
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
